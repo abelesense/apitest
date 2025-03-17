@@ -20,8 +20,6 @@ return new class extends Migration
             $table->string('action');
             $table->json('old_values')->nullable();
             $table->json('new_values')->nullable();
-            $table->ipAddress('ip_address')->nullable();
-            $table->text('user_agent')->nullable();
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');

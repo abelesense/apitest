@@ -3,8 +3,9 @@
 namespace App\Services;
 
 use App\Models\User;
+use App\Models\UserAuditLog;
 use Illuminate\Support\Facades\Auth;
-use UserAuditLog;
+
 
 class UserAuditService
 {
@@ -28,6 +29,39 @@ class UserAuditService
      * @param array|null $newValues
      * @return void
      */
+
+    /**
+     * Логирование обновления пользователя
+     *
+     * @param User $user
+     * @param array $oldValues
+     * @return void
+     */
+    public function logUpdated(User $user, array $oldValues)
+    {
+        $this->log(
+            $user->id,
+            'update',
+            $oldValues,
+            $this->getUserDataForLog($user)
+        );
+    }
+
+    /**
+     * Логирование удаления пользователя
+     *
+     * @param User $user
+     * @return void
+     */
+    public function logDeleted(User $user)
+    {
+        $this->log(
+            $user->id,
+            'delete',
+            $this->getUserDataForLog($user),
+            null
+        );
+    }
     protected function log($userId, $action, $oldValues = null, $newValues = null)
     {
         UserAuditLog::create([

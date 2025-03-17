@@ -7,12 +7,28 @@ use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
+use App\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    /**
+     * @var UserService
+     */
+    protected UserService $userService;
+
+    /**
+     * Constructor
+     *
+     * @param UserService $userService
+     */
+    public function __construct(UserService $userService)
+    {
+        $this->userService = $userService;
+    }
+
     /**
      * New user registration
      *
@@ -21,16 +37,15 @@ class AuthController extends Controller
      */
     public function register(RegisterRequest $request)
     {
-        $role = UserRole::USER->value;
-
-        $user = User::create([
+        $userData = [
             'name' => $request->name,
             'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => $role,
-        ]);
+            'password' => $request->password,
+            'role' => UserRole::USER->value,
+        ];
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $user = $this->userService->createUser($userData);
+        $token = $this->userService->createAuthToken($user);
 
         return response()->json([
             'status' => 'success',
@@ -59,7 +74,7 @@ class AuthController extends Controller
             ]);
         }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $this->userService->createAuthToken($user);
 
         return response()->json([
             'status' => 'success',

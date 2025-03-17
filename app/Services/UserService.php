@@ -80,4 +80,57 @@ class UserService
         return User::find($id);
     }
 
+    /**
+     * Update user
+     *
+     * @param User $user
+     * @param array $data
+     * @return User
+     */
+    public function updateUser(User $user, array $data): User
+    {
+        $oldValues = [
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role,
+        ];
+
+        // Prepare data for update
+        $userData = array_intersect_key($data, array_flip(['name', 'email', 'role']));
+
+        // Handle password separately since it needs hashing
+        if (isset($data['password'])) {
+            $userData['password'] = Hash::make($data['password']);
+        }
+
+        $user->fill($userData);
+        $user->save();
+
+        $this->auditService->logUpdated($user, $oldValues);
+
+        return $user;
+    }
+
+    /**
+     * Delete user
+     *
+     * @param User $user
+     * @return bool
+     */
+    public function deleteUser(User $user): bool
+    {
+        $this->auditService->logDeleted($user);
+        return $user->delete();
+    }
+
+    /**
+     * Create auth token for user
+     *
+     * @param User $user
+     * @return string
+     */
+    public function createAuthToken(User $user): string
+    {
+        return $user->createToken('auth_token')->plainTextToken;
+    }
 }

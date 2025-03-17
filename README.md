@@ -108,19 +108,18 @@ The API implements role-based access control. By default, users are assigned the
 **Response (200 OK):**
 ```json
 {
-  "status": "success",
-  "data": {
-    "user": [
-      {
-        "id": 1,
-        "name": "John Doe",
-        "email": "john@example.com",
-        "role": "user",
-        "created_at": "2025-03-17T12:00:00.000000Z",
-        "updated_at": "2025-03-17T12:00:00.000000Z"
-      }
+    "status": "success",
+    "data": {
+        "user": {
+            "id": 4,
+            "name": "Ang",
+            "email": "ang@mail",
+            "role": "admin",
+            "created_at": "2025-03-17 23:22:26",
+            "updated_at": "2025-03-17 23:22:26"
+        }
     }
-    }
+}
 ```
 
 ### Logout
@@ -217,8 +216,7 @@ Example: `/api/users?page=2&per_page=20`
 ## Installation
 
 1. Clone the repository
-2. Install dependencies: `composer install`
-3. Set up your `.env` file
+2. Set up your `.env` file
 ```
 DB_CONNECTION=pgsql
 DB_HOST=db
@@ -227,9 +225,23 @@ DB_DATABASE=laravel
 DB_USERNAME=username
 DB_PASSWORD=pwd
 ```
-4. Run migrations: `php artisan migrate`
-5. Generate application key: `php artisan key:generate`
-6. Serve the application: `php artisan serve`
+3. Start the server
+```
+docker-compose up --build
+```
+4. Go to the php-fpm container
+```
+docker compose exec php-fpm bash
+```
+5. From the php-fpm container, install the dependencies:
+```
+composer install
+```
+6. From the php-fpm container, run the migrations:
+```
+php artisan migrate
+```
+
 
 ## Requirements
 

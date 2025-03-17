@@ -5,37 +5,20 @@ namespace App\Http\Controllers;
 use App\Http\Requests\UserStoreRequest;
 use App\Http\Requests\UserUpdateRequest;
 use App\Http\Resources\UserResource;
-use App\Models\User;
 use App\Services\UserService;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-
-    /**
-     * @var UserService
-     */
     protected UserService $userService;
 
-    /**
-     * Controller Constructor
-     *
-     * @param UserService $userService
-     */
     public function __construct(UserService $userService)
     {
         $this->userService = $userService;
     }
 
-    /**
-     * Getting the list of users with pagination
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function index(Request $request)
     {
-
         $perPage = $request->query('per_page', 15);
         $page = $request->query('page', 1);
         $maxPerPage = 100;
@@ -45,7 +28,7 @@ class UserController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => [
-                'users' => $users->items(),
+                'users' => UserResource::collection($users),
                 'pagination' => [
                     'total' => $users->total(),
                     'per_page' => $users->perPage(),
@@ -58,12 +41,6 @@ class UserController extends Controller
         ], 200);
     }
 
-    /**
-     * Creating a new user
-     *
-     * @param  \App\Http\Requests\UserStoreRequest  $request
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function store(UserStoreRequest $request)
     {
         $userData = $request->validated();
@@ -72,26 +49,12 @@ class UserController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'User created successfully',
-            'data' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => $user->role,
-                'created_at' => $user->created_at
-            ]
+            'data' => new UserResource($user),
         ], 201);
     }
 
-    /**
-     * Retrieving user information
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function show($id)
     {
-
-
         $user = $this->userService->getUserById($id);
 
         if (!$user) {
@@ -103,28 +66,23 @@ class UserController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => $user->role,
-                'created_at' => $user->created_at,
-                'updated_at' => $user->updated_at
-            ]
+            'data' => new UserResource($user),
         ], 200);
     }
 
-    /**
-     * Updating user data
-     *
-     * @param  \App\Http\Requests\UserUpdateRequest  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function update(UserUpdateRequest $request, $id)
     {
-        $user = User::findOrFail($id);
-        $user->update($request->only(['name', 'email', 'role']));
+        $user = $this->userService->getUserById($id);
+
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User not found'
+            ], 404);
+        }
+
+        $userData = $request->validated();
+        $user = $this->userService->updateUser($user, $userData);
 
         return response()->json([
             'status' => 'success',
@@ -133,21 +91,29 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * Deleting a user
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function destroy($id)
     {
-        $user = User::findOrFail($id);
-        $user->delete();
+        $user = $this->userService->getUserById($id);
+
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User not found'
+            ], 404);
+        }
+
+        $result = $this->userService->deleteUser($user);
+
+        if (!$result) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to delete user'
+            ], 500);
+        }
 
         return response()->json([
             'status' => 'success',
             'message' => 'User deleted successfully',
         ]);
     }
-
 }
